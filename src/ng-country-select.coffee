@@ -1,6 +1,6 @@
 angular
 .module 'countrySelect', []
-.factory 'countryService', ->
+.directive 'countrySelect', ->
   allCountries = [
     {code: 'AF', name: 'Afghanistan'},
     {code: 'AL', name: 'Albania'},
@@ -254,76 +254,56 @@ angular
     {code: 'AX', name: 'Åland Islands'}
   ]
 
-  all: allCountries.slice(0)
-
-.directive 'countrySelect', ['countryService', (countryService) ->
   restrict: 'AE'
   replace: true
   scope:
     priorities: '@csPriorities'
     only: '@csOnly'
     except: '@csExcept'
-    selected: '@csSelected'
-  template: '<select><option ng-repeat="option in options"
-                value="{{ option.code }}"
-                ng-disabled="option.disabled"
-                ng-selected="option.selected">{{ option.name }}</option></select>'
-  controller: ['$scope', '$attrs', 'countryService', ($scope, $attrs, countryService) ->
+  template: '<select ng-options="country.code as country.name for country in countries">
+                <option value="" ng-if="isSelectionOptional"></option>
+             </select>'
+  controller: ['$scope', '$attrs', ($scope, $attrs) ->
+    separator =
+      code: '-'
+      name: '────────────────────'
+      disabled: true
+
     countryCodesIn = (codesString) ->
       codes = if codesString then codesString.split(',') else []
       codes.map (code) -> code.trim()
 
-    findOptionsByCodes = (codes) =>
-      (option for option in @options when option.code in codes)
+    findCountriesIn = (codesString) =>
+      countryCodes = countryCodesIn(codesString)
+      (country for country in @countries when country.code in countryCodes)
 
-    findOptionsByCode = (code) =>
-      return [] unless code
-      (option for option in @options when option.code == code)
-
-    separator =
-      code: '---------------'
-      name: '---------------'
-      disabled: true
-
-    removeOption = (optionToRemove) =>
-      @options.splice @options.indexOf(optionToRemove), 1
+    removeCountry = (country) =>
+      @countries.splice @countries.indexOf(country), 1
 
     includeOnlyRequestedCountries = =>
       return unless $scope.only
-      @options = findOptionsByCodes(countryCodesIn($scope.only))
+      @countries = findCountriesIn $scope.only
 
     removeExcludedCountries = ->
       return unless $scope.except
-      removeOption(option) for option in findOptionsByCodes(countryCodesIn($scope.except))
+      removeCountry(country) for country in findCountriesIn $scope.except
 
-    setPriorityCountries = =>
-      priorityOptions = findOptionsByCodes(countryCodesIn($scope.priorities))
-      return if priorityOptions.length == 0
+    updateWithPriorityCountries = =>
+      priorityCountries = findCountriesIn $scope.priorities
+      return if priorityCountries.length == 0
 
-      @options.unshift separator
+      @countries.unshift separator
 
-      for priorityOption in priorityOptions.reverse()
-        removeOption priorityOption
-        @options.unshift priorityOption
+      for priorityCountry in priorityCountries.reverse()
+        removeCountry priorityCountry
+        @countries.unshift priorityCountry
 
-    addOptionalIfNotMandatory = =>
-      if $attrs.required == undefined
-        @options.unshift
-          code: ''
-          name: ''
-
-    setSelected = ->
-      return unless $scope.selected
-      option.selected = true for option in findOptionsByCode($scope.selected)
-
-    @options = countryService.all
+    @countries = allCountries.splice(0)
 
     includeOnlyRequestedCountries()
     removeExcludedCountries()
-    setPriorityCountries()
-    setSelected()
-    addOptionalIfNotMandatory()
+    updateWithPriorityCountries()
 
-    $scope.options = @options
+    $scope.countries = @countries
+    $scope.isSelectionOptional = ($attrs.required == undefined)
   ]
-]

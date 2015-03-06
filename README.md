@@ -67,12 +67,6 @@ Discarding certain countries:
 <country-select cs-except="AU, DE, GB, US"></country-select>
 ```
 
-Pre-selecting a particular country:
-
-```html
-<country-select cs-selected="AU"></country-select>
-```
-
 Making the selection mandatory by removing the empty option:
 
 ```html

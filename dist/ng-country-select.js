@@ -1,7 +1,7 @@
 (function() {
   var indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-  angular.module('countrySelect', []).factory('countryService', function() {
+  angular.module('countrySelect', []).directive('countrySelect', function() {
     var allCountries;
     allCountries = [
       {
@@ -757,144 +757,97 @@
       }
     ];
     return {
-      all: allCountries.slice(0)
+      restrict: 'AE',
+      replace: true,
+      scope: {
+        priorities: '@csPriorities',
+        only: '@csOnly',
+        except: '@csExcept'
+      },
+      template: '<select ng-options="country.code as country.name for country in countries"> <option value="" ng-if="isSelectionOptional"></option> </select>',
+      controller: [
+        '$scope', '$attrs', function($scope, $attrs) {
+          var countryCodesIn, findCountriesIn, includeOnlyRequestedCountries, removeCountry, removeExcludedCountries, separator, updateWithPriorityCountries;
+          separator = {
+            code: '-',
+            name: '────────────────────',
+            disabled: true
+          };
+          countryCodesIn = function(codesString) {
+            var codes;
+            codes = codesString ? codesString.split(',') : [];
+            return codes.map(function(code) {
+              return code.trim();
+            });
+          };
+          findCountriesIn = (function(_this) {
+            return function(codesString) {
+              var country, countryCodes, i, len, ref, ref1, results;
+              countryCodes = countryCodesIn(codesString);
+              ref = _this.countries;
+              results = [];
+              for (i = 0, len = ref.length; i < len; i++) {
+                country = ref[i];
+                if (ref1 = country.code, indexOf.call(countryCodes, ref1) >= 0) {
+                  results.push(country);
+                }
+              }
+              return results;
+            };
+          })(this);
+          removeCountry = (function(_this) {
+            return function(country) {
+              return _this.countries.splice(_this.countries.indexOf(country), 1);
+            };
+          })(this);
+          includeOnlyRequestedCountries = (function(_this) {
+            return function() {
+              if (!$scope.only) {
+                return;
+              }
+              return _this.countries = findCountriesIn($scope.only);
+            };
+          })(this);
+          removeExcludedCountries = function() {
+            var country, i, len, ref, results;
+            if (!$scope.except) {
+              return;
+            }
+            ref = findCountriesIn($scope.except);
+            results = [];
+            for (i = 0, len = ref.length; i < len; i++) {
+              country = ref[i];
+              results.push(removeCountry(country));
+            }
+            return results;
+          };
+          updateWithPriorityCountries = (function(_this) {
+            return function() {
+              var i, len, priorityCountries, priorityCountry, ref, results;
+              priorityCountries = findCountriesIn($scope.priorities);
+              if (priorityCountries.length === 0) {
+                return;
+              }
+              _this.countries.unshift(separator);
+              ref = priorityCountries.reverse();
+              results = [];
+              for (i = 0, len = ref.length; i < len; i++) {
+                priorityCountry = ref[i];
+                removeCountry(priorityCountry);
+                results.push(_this.countries.unshift(priorityCountry));
+              }
+              return results;
+            };
+          })(this);
+          this.countries = allCountries.splice(0);
+          includeOnlyRequestedCountries();
+          removeExcludedCountries();
+          updateWithPriorityCountries();
+          $scope.countries = this.countries;
+          return $scope.isSelectionOptional = $attrs.required === void 0;
+        }
+      ]
     };
-  }).directive('countrySelect', [
-    'countryService', function(countryService) {
-      return {
-        restrict: 'AE',
-        replace: true,
-        scope: {
-          priorities: '@csPriorities',
-          only: '@csOnly',
-          except: '@csExcept',
-          selected: '@csSelected'
-        },
-        template: '<select><option ng-repeat="option in options" value="{{ option.code }}" ng-disabled="option.disabled" ng-selected="option.selected">{{ option.name }}</option></select>',
-        controller: [
-          '$scope', '$attrs', 'countryService', function($scope, $attrs, countryService) {
-            var addOptionalIfNotMandatory, countryCodesIn, findOptionsByCode, findOptionsByCodes, includeOnlyRequestedCountries, removeExcludedCountries, removeOption, separator, setPriorityCountries, setSelected;
-            countryCodesIn = function(codesString) {
-              var codes;
-              codes = codesString ? codesString.split(',') : [];
-              return codes.map(function(code) {
-                return code.trim();
-              });
-            };
-            findOptionsByCodes = (function(_this) {
-              return function(codes) {
-                var i, len, option, ref, ref1, results;
-                ref = _this.options;
-                results = [];
-                for (i = 0, len = ref.length; i < len; i++) {
-                  option = ref[i];
-                  if (ref1 = option.code, indexOf.call(codes, ref1) >= 0) {
-                    results.push(option);
-                  }
-                }
-                return results;
-              };
-            })(this);
-            findOptionsByCode = (function(_this) {
-              return function(code) {
-                var i, len, option, ref, results;
-                if (!code) {
-                  return [];
-                }
-                ref = _this.options;
-                results = [];
-                for (i = 0, len = ref.length; i < len; i++) {
-                  option = ref[i];
-                  if (option.code === code) {
-                    results.push(option);
-                  }
-                }
-                return results;
-              };
-            })(this);
-            separator = {
-              code: '---------------',
-              name: '---------------',
-              disabled: true
-            };
-            removeOption = (function(_this) {
-              return function(optionToRemove) {
-                return _this.options.splice(_this.options.indexOf(optionToRemove), 1);
-              };
-            })(this);
-            includeOnlyRequestedCountries = (function(_this) {
-              return function() {
-                if (!$scope.only) {
-                  return;
-                }
-                return _this.options = findOptionsByCodes(countryCodesIn($scope.only));
-              };
-            })(this);
-            removeExcludedCountries = function() {
-              var i, len, option, ref, results;
-              if (!$scope.except) {
-                return;
-              }
-              ref = findOptionsByCodes(countryCodesIn($scope.except));
-              results = [];
-              for (i = 0, len = ref.length; i < len; i++) {
-                option = ref[i];
-                results.push(removeOption(option));
-              }
-              return results;
-            };
-            setPriorityCountries = (function(_this) {
-              return function() {
-                var i, len, priorityOption, priorityOptions, ref, results;
-                priorityOptions = findOptionsByCodes(countryCodesIn($scope.priorities));
-                if (priorityOptions.length === 0) {
-                  return;
-                }
-                _this.options.unshift(separator);
-                ref = priorityOptions.reverse();
-                results = [];
-                for (i = 0, len = ref.length; i < len; i++) {
-                  priorityOption = ref[i];
-                  removeOption(priorityOption);
-                  results.push(_this.options.unshift(priorityOption));
-                }
-                return results;
-              };
-            })(this);
-            addOptionalIfNotMandatory = (function(_this) {
-              return function() {
-                if ($attrs.required === void 0) {
-                  return _this.options.unshift({
-                    code: '',
-                    name: ''
-                  });
-                }
-              };
-            })(this);
-            setSelected = function() {
-              var i, len, option, ref, results;
-              if (!$scope.selected) {
-                return;
-              }
-              ref = findOptionsByCode($scope.selected);
-              results = [];
-              for (i = 0, len = ref.length; i < len; i++) {
-                option = ref[i];
-                results.push(option.selected = true);
-              }
-              return results;
-            };
-            this.options = countryService.all;
-            includeOnlyRequestedCountries();
-            removeExcludedCountries();
-            setPriorityCountries();
-            setSelected();
-            addOptionalIfNotMandatory();
-            return $scope.options = this.options;
-          }
-        ]
-      };
-    }
-  ]);
+  });
 
 }).call(this);

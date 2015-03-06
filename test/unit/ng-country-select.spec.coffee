@@ -11,6 +11,7 @@ describe 'ng-country-select', ->
 
   describe 'directive', ->
     scope = null
+    isolateScope = null
     compile = null
     element = null
 
@@ -19,143 +20,91 @@ describe 'ng-country-select', ->
       scope = $rootScope.$new()
       compile = $compile
 
-    compileElement = (elementSource) ->
-      element = compile(elementSource)(scope);
+      scope.selectedCountry = 'AU'
+
+    compileSource = (source) ->
+      element = compile(source)(scope);
       scope.$digest()
 
-    numTotalOptions = 251
+      isolateScope = element.isolateScope()
 
-    options = -> element.find('option')
+    allCountriesCount = 250
+    includingOptionalCount = allCountriesCount + 1
+    basicSource = '<country-select ng-model="selectedCountry"></country-select>'
+
     firstOption = -> element.find('option')[0]
-    optionAtIndex = (index) -> $(options()[index])
-    optionWithValue = (value) -> $(element[0]).find('option[value="' + value + '"]')[0]
 
-    separatorValue = '---------------'
-    separator = -> optionWithValue(separatorValue)
+    describe 'basic usage', ->
+      beforeEach -> compileSource basicSource
 
+      it 'sets the list of countries in the directives scope', ->
+        expect(isolateScope.countries).toBeDefined()
+        expect(isolateScope.countries.length).toEqual allCountriesCount
 
-    it 'replaces attribute with a select element', ->
-      compileElement '<country-select></country-select>'
+      it 'replaces the directive element with a select', ->
+        expect(element[0].nodeName).toEqual 'SELECT'
 
-      expect(element[0].nodeName).toEqual 'SELECT'
+      it 'populates the select with options', ->
+        expect(element.find('option').length).toEqual includingOptionalCount
 
-    it 'contains a list of options', ->
-      compileElement '<country-select></country-select>'
-
-      expect(element.find('option')).not.toBeEmpty()
-
-    it 'does not replace id, class etc attribute set on the element', ->
-      compileElement '<country-select id="foo" class="wam bam" name="bar"></country-select>'
-
-      expect(element.attr('id')).toEqual 'foo'
-
-      expect(element.attr('name')).toEqual 'bar'
-
-      expect(element.hasClass('wam')).toBe true
-      expect(element.hasClass('bam')).toBe true
-
-    describe 'with required option', ->
-      emptyOption = -> optionWithValue('')
-
+    describe 'with required attribute', ->
       describe 'when not specified', ->
-        beforeEach -> compileElement '<country-select></country-select>'
+        beforeEach -> compileSource basicSource
 
-        it 'contains an empty option as the first option', ->
-          expect(emptyOption()).not.toBeUndefined()
+        it 'sets the isSelectionOptional flag in scope to be true', ->
+          expect(isolateScope.isSelectionOptional).toBeDefined()
+          expect(isolateScope.isSelectionOptional).toBe true
 
-          expect($(firstOption()).val()).toEqual ''
-          expect($(firstOption()).text()).toEqual ''
+        it 'sets the first option to be an empty option', ->
+          expect(firstOption().value).toEqual ''
+          expect(firstOption().textContent).toEqual ''
 
       describe 'when specified', ->
-        beforeEach -> compileElement '<country-select required></country-select>'
+        beforeEach -> compileSource '<country-select ng-model="selectedCountry" required></country-select>'
 
-        it 'does not contain an empty option', ->
-          expect(emptyOption()).toBeUndefined()
+        it 'sets the isSelectionOptional flag in scope to be false', ->
+          expect(isolateScope.isSelectionOptional).toBeDefined()
+          expect(isolateScope.isSelectionOptional).toBe false
 
-    describe 'with selected option', ->
-      selectedOptions = -> $(element[0]).find('option:selected')
+        it 'sets the first option to be the first country', ->
+          expect(firstOption().value).toEqual '0'
+          expect(firstOption().textContent).toEqual 'Afghanistan'
 
-      describe 'when not specified', ->
-        beforeEach -> compileElement '<country-select></country-select>'
+    describe 'with priority countries specified', ->
+      beforeEach -> compileSource '<country-select ng-model="selectedCountry" cs-priorities="AU, GB , US"></country-select>'
 
-        it 'has one option marked as selected', ->
-          expect(selectedOptions().length).toEqual 1
+      it 'sets the priority elements in the order specified at the start of the list', ->
+        expect(isolateScope.countries[0].code).toEqual 'AU'
+        expect(isolateScope.countries[1].code).toEqual 'GB'
+        expect(isolateScope.countries[2].code).toEqual 'US'
 
-        it 'has the first option marked as selected', ->
-          expect(selectedOptions()[0].textContent).toEqual ''
+      it 'adds a separator after the priority items', ->
+        expect(isolateScope.countries[3].code).toEqual '-'
+        expect(isolateScope.countries[3].name).toEqual '────────────────────'
+        expect(isolateScope.countries[3].disabled).toEqual true
 
-      describe 'when specified', ->
-        beforeEach -> compileElement '<country-select cs-selected="UZ"></country-select>'
+    # TODO: FIXME: Requires Angular 1.4 to get this done
+    #        expect(element.find('option')[4].textContent).toEqual '────────────────────'
+    #        expect(element.find('option')[4].disabled).toEqual true
 
-        it 'has one option marked as selected', ->
-          expect(selectedOptions().length).toEqual 1
+    describe 'with only option specified', ->
+      beforeEach -> compileSource '<country-select ng-model="selectedCountry" cs-only="AU, GB , US"></country-select>'
 
-        it 'has the specified option marked as selected', ->
-          expect($(selectedOptions()[0]).text()).toEqual 'Uzbekistan'
+      it 'only contains the countries specified in the list in the order given', ->
+        expect(isolateScope.countries.length).toEqual 3
 
-    describe 'with priorities option', ->
-      describe 'when not specified', ->
-        beforeEach -> compileElement '<country-select></country-select>'
+        expect(isolateScope.countries[0].code).toEqual 'AU'
+        expect(isolateScope.countries[1].code).toEqual 'GB'
+        expect(isolateScope.countries[2].code).toEqual 'US'
 
-        it 'returns options in the default order', ->
-          expect($(firstOption()).val()).toEqual ''
+    describe 'with except option specified', ->
+      beforeEach -> compileSource '<country-select ng-model="selectedCountry" cs-except="AU, GB , US"></country-select>'
 
-        it 'does not include a separator', ->
-          expect(separator()).toBeUndefined()
+      it 'does not contain the specified countries', ->
+        expect(isolateScope.countries.length).toEqual (allCountriesCount - 3)
 
-      describe 'when specified as empty string', ->
-        beforeEach -> compileElement '<country-select cs-priorities=""></country-select>'
+        includedCountries = country.code for country in isolateScope.countries
 
-        it 'returns options in the default order', ->
-          expect($(firstOption()).val()).toEqual ''
-
-        it 'does not include a separator', ->
-          expect(separator()).toBeUndefined()
-
-      describe 'when specified with country codes', ->
-        beforeEach -> compileElement '<country-select cs-priorities="AU, US, Blah"></country-select>'
-
-        it 'returns options with the priorities first', ->
-          expect(optionAtIndex(0).val()).toEqual ''
-          expect(optionAtIndex(1).val()).toEqual 'AU'
-          expect(optionAtIndex(2).val()).toEqual 'US'
-
-        it 'include a separator after priorities', ->
-          expect(optionAtIndex(3).val()).toEqual separatorValue
-
-        it 'separator is disabled', ->
-          expect($(separator()).attr('disabled')).toEqual 'disabled'
-
-    describe 'with only option', ->
-      describe 'when specified as empty string', ->
-        beforeEach -> compileElement '<country-select cs-only=""></country-select>'
-
-        it 'returns options for all countries', ->
-          expect(options().length).toEqual numTotalOptions
-
-      describe 'when specified with country codes', ->
-        beforeEach -> compileElement '<country-select cs-only=" AU, US , Blah"></country-select>'
-
-        it 'returns options only for the listed countries', ->
-          expect(options().length).toEqual 3
-
-          expect(optionAtIndex(0).val()).toEqual ''
-          expect(optionAtIndex(1).val()).toEqual 'AU'
-          expect(optionAtIndex(2).val()).toEqual 'US'
-
-    describe 'with except option', ->
-      describe 'when specified as empty string', ->
-        beforeEach -> compileElement '<country-select cs-except=""></country-select>'
-
-        it 'returns options for all countries', ->
-          expect(options().length).toEqual numTotalOptions
-
-      describe 'when specified with country codes', ->
-        beforeEach -> compileElement '<country-select cs-except=" AU, US , Blah"></country-select>'
-
-        it 'returns options only for the listed countries', ->
-          expect(options().length).toEqual (numTotalOptions - 2)
-
-          expect(optionWithValue('AU')).not.toBeDefined()
-          expect(optionWithValue('US')).not.toBeDefined()
-
+        expect(includedCountries.indexOf('AU')).toEqual -1
+        expect(includedCountries.indexOf('GB')).toEqual -1
+        expect(includedCountries.indexOf('US')).toEqual -1
