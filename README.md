@@ -1,5 +1,7 @@
 # ng-country-select
 
+[![Build Status](https://travis-ci.org/navinpeiris/ng-country-select.svg?branch=master)](https://travis-ci.org/navinpeiris/ng-country-select)
+
 Angular module to generate an HTML select list of countries using country codes in the
 [ISO 3166-1 standard](https://en.wikipedia.org/wiki/ISO_3166-1).
 
