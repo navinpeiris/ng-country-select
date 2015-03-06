@@ -52,19 +52,19 @@ Simple usage to get a list of countries:
 Supplying priority countries to be placed at the top of the list:
 
 ```html
-<country-select cs-priorities="AU, DE GB, US"></country-select>
+<country-select cs-priorities="AU, DE, GB, US"></country-select>
 ```
 
 Supplying only certain countries:
 
 ```html
-<country-select cs-only="AU, DE GB, US"></country-select>
+<country-select cs-only="AU, DE, GB, US"></country-select>
 ```
 
 Discarding certain countries:
 
 ```html
-<country-select cs-except="AU, DE GB, US"></country-select>
+<country-select cs-except="AU, DE, GB, US"></country-select>
 ```
 
 Pre-selecting a particular country:
