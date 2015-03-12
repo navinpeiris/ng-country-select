@@ -839,7 +839,7 @@
               return results;
             };
           })(this);
-          this.countries = allCountries.splice(0);
+          this.countries = allCountries.slice();
           includeOnlyRequestedCountries();
           removeExcludedCountries();
           updateWithPriorityCountries();
