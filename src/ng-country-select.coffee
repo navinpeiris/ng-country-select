@@ -298,7 +298,7 @@ angular
         removeCountry priorityCountry
         @countries.unshift priorityCountry
 
-    @countries = allCountries.splice(0)
+    @countries = allCountries.slice()
 
     includeOnlyRequestedCountries()
     removeExcludedCountries()
