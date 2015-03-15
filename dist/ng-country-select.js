@@ -844,7 +844,7 @@
           removeExcludedCountries();
           updateWithPriorityCountries();
           $scope.countries = this.countries;
-          return $scope.isSelectionOptional = $attrs.required === void 0;
+          return $scope.isSelectionOptional = $attrs.csRequired === void 0;
         }
       ]
     };

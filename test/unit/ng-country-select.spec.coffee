@@ -60,7 +60,7 @@ describe 'ng-country-select', ->
           expect(firstOption().textContent).toEqual ''
 
       describe 'when specified', ->
-        beforeEach -> compileSource '<country-select ng-model="selectedCountry" required></country-select>'
+        beforeEach -> compileSource '<country-select ng-model="selectedCountry" cs-required></country-select>'
 
         it 'sets the isSelectionOptional flag in scope to be false', ->
           expect(isolateScope.isSelectionOptional).toBeDefined()

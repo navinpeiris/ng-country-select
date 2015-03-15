@@ -70,7 +70,7 @@ Discarding certain countries:
 Making the selection mandatory by removing the empty option:
 
 ```html
-<country-select required></country-select>
+<country-select cs-required></country-select>
 ```
 
 ## License
