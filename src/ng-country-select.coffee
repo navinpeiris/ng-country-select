@@ -260,9 +260,7 @@ angular
     priorities: '@csPriorities'
     only: '@csOnly'
     except: '@csExcept'
-  template: '<select ng-options="country.code as country.name for country in countries">
-                <option value="" ng-if="isSelectionOptional"></option>
-             </select>'
+  template: '<select><option value="" ng-if="isSelectionOptional"></option><option ng-repeat="country in countries" value="{{country.code}}">{{country.name}}</option></select>'
   controller: ['$scope', '$attrs', ($scope, $attrs) ->
     separator =
       code: '-'
