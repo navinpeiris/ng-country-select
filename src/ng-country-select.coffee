@@ -260,14 +260,17 @@ angular
     priorities: '@csPriorities'
     only: '@csOnly'
     except: '@csExcept'
+    placeholder: '@?csPlaceholder'
   template: '<select ng-options="country.code as country.name for country in countries">
-                <option value="" ng-if="isSelectionOptional"></option>
+                <option value="" ng-if="isSelectionOptional">{{ placeholder }}</option>
              </select>'
   controller: ['$scope', '$attrs', ($scope, $attrs) ->
     separator =
       code: '-'
       name: '────────────────────'
       disabled: true
+
+    $scope.placeholder = if angular.isDefined($scope.placeholder) then $scope.placeholder else ''
 
     countryCodesIn = (codesString) ->
       codes = if codesString then codesString.split(',') else []
