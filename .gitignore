@@ -1,3 +1,7 @@
 /.idea
 /node_modules
 /npm-debug.log
+src/*.js
+test/**/*.js
+src/*.map
+test/**/*.map
