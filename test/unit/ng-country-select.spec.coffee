@@ -108,3 +108,10 @@ describe 'ng-country-select', ->
         expect(includedCountries.indexOf('AU')).toEqual -1
         expect(includedCountries.indexOf('GB')).toEqual -1
         expect(includedCountries.indexOf('US')).toEqual -1
+
+    describe 'with placeholder attribute', ->
+      beforeEach -> compileSource '<country-select ng-model="selectedCountry" cs-placeholder="Select a Country"></country-select>'
+
+      it 'sets the first option to be the placeholder', ->
+        expect(firstOption().value).toEqual ''
+        expect(firstOption().textContent).toEqual 'Select a Country'
