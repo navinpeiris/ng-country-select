@@ -6,7 +6,7 @@ angular
     { code: 'AL', name: 'Albania' },
     { code: 'DZ', name: 'Algeria' },
     { code: 'AS', name: 'American Samoa' },
-    { code: 'AD', name: 'Andorre' },
+    { code: 'AD', name: 'Andorra' },
     { code: 'AO', name: 'Angola' },
     { code: 'AI', name: 'Anguilla' },
     { code: 'AQ', name: 'Antarctica' },
